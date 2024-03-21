@@ -1,4 +1,5 @@
 """CV03"""
+import re
 
 
 def factorize(n: int) -> list:
@@ -53,8 +54,7 @@ def text_analysis(text_file: str) -> dict:
     with open(text_file, 'r', encoding='utf-8') as file:
         text = file.read()
         text = text.lower()
-        text.replace('\n', ' ').replace(".", "").replace(
-            ",", "").replace("!", "").replace("?", "")
+        text = re.sub(r"[^\w\s]", "", text)
         letters, words = {}, {}
         for char in text:
             if char.isalpha():
