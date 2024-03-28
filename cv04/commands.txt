@@ -40,7 +40,7 @@ db.restaurants.find({"grades.score": {$gt: 80}})
 # ---
 
 # 14. vypsani restauraci, ktere maji alespon jedno skore mezi 80 a 90
-db.restaurants.find({"grades.score": {$gte: 80, $lte: 90}})
+db.restaurants.find({grades: {$elemMatch: {"score": {$gte: 80, $lte: 90}}}})
 
 # 15. pridani noveho pole "popular: 1" k restauracim, ktere maji alespon 1 skore vyssi nez 80
 db.restaurants.updateMany({"grades.score": {$gt: 80}}, {$set: {popular: 1}})
