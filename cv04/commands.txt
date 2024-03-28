@@ -1,0 +1,55 @@
+# 1. vlozeni nove restaurace s alespon 3 poli
+db.restaurants.insertOne({"address": {"building": "69", "coord": [-1, 1], "street": "Test", "zipcode": "12345"}, "borough": "Bronx", "cuisine": "Bakery", "name": "Morris Park Bake Shop", "restaurant_id": "845162"})
+
+# 2. vypsani nove vlozene restaurace
+db.restaurants.findOne({"restaurant_id": "845162"})
+
+# 3. aktualizace nove restaurace - zmente alespon nazev
+db.restaurants.updateOne({"restaurant_id": "845162"}, {$set: {name: "Test Restaurant"}})
+
+# 4. pridani vaseho hodnoceni restaurace
+db.restaurants.updateOne({"restaurant_id": "845162"}, {$push: {grades: {"date": new Date(), "grade": "A", "score": 10}}})
+
+# 5. smazani nove restaurace
+db.restaurants.deleteOne({"restaurant_id": "845162"})
+
+# 6. vypsani vsech restauraci
+db.restaurants.find({})
+
+# 7. vypsani vsech restauraci - pouze nazvy, abecedne serazene
+db.restaurants.find({}, {name: 1, _id: 0}).sort({name: 1})
+
+# 8. vypsani pouze 10 zaznamu z predchoziho dotazu
+db.restaurants.find({}, {name: 1, _id: 0}).sort({name: 1}).limit(10)
+
+# 9. zobrazeni dalsich 10 zaznamu
+db.restaurants.find({}, {name: 1, _id: 0}).sort({name: 1}).skip(10).limit(10)
+
+# 10. vypsani restauraci ve ctvrti Bronx
+db.restaurants.find({borough: "Bronx"})
+
+# 11. vypsani nazvu restauraci, jejich nazev zacina na pismeno M
+db.restaurants.find({name: /^M/}, {name: 1, _id: 0})
+
+# 12. vypsani restauraci, ktere vari italskou kuchyni a sidli na Manhattanu
+db.restaurants.find({borough: "Manhattan", cuisine: "Italian"})
+
+# 13. vypsani restauraci, ktere maji alespon 1 skore vyssi nez 80
+db.restaurants.find({"grades.score": {$gt: 80}})
+
+# ---
+
+# 14. vypsani restauraci, ktere maji alespon jedno skore mezi 80 a 90
+db.restaurants.find({"grades.score": {$gte: 80, $lte: 90}})
+
+# 15. pridani noveho pole "popular: 1" k restauracim, ktere maji alespon 1 skore vyssi nez 80
+db.restaurants.updateMany({"grades.score": {$gt: 80}}, {$set: {popular: 1}})
+
+# 16. pridani noveho pole "trash: 1" k restauracim, ktere maji alespon 1 skore nizsi nez 1
+db.restaurants.updateMany({"grades.score": {$lt: 1}}, {$set: {trash: 1}})
+
+# 17. vypsani kontroverznich restauraci, tedy tech, co maji popular i trash 1
+db.restaurants.find({popular: 1, trash: 1})
+
+# 18. pridani noveho pole "top_score: 1" ke vsem hodnocenim, ktere jsou vyssi nez 90
+db.restaurants.updateMany({"grades.score": {$gt: 90}}, {$set: {"grades.$.top_score": 1}})
