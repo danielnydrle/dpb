@@ -1,5 +1,6 @@
 import datetime
 from init import collection
+from bson.objectid import ObjectId
 
 '''
 DPB - 5. Cvičení
@@ -40,43 +41,43 @@ print_restaurants(cursor)
 
 # 2. Vypsání všech restaurací - pouze názvů, abecedně seřazených
 print_delimiter(2)
-cursor = collection.find({}, {"name": 1, "_id": 0}).sort(
+cursor = collection.find({}, {"name": 1}).sort(
     key_or_list="name", direction=1)
 print_restaurant_names(cursor)
 
 # 3. Vypsání pouze 5 záznamů z předchozího dotazu
 print_delimiter(3)
-cursor = collection.find({}, {"name": 1, "_id": 0}).sort(
+cursor = collection.find({}, {"name": 1}).sort(
     key_or_list="name", direction=1
 ).limit(5)
 print_restaurant_names(cursor)
 
 # 4. Zobrazte dalších 10 záznamů
 print_delimiter(4)
-cursor = collection.find({}, {"name": 1, "_id": 0}).sort(
+cursor = collection.find({}, {"name": 1}).sort(
     key_or_list="name", direction=1
 ).skip(10).limit(5)
 print_restaurant_names(cursor)
 
 # 5. #Vypsání restaurací ve čtvrti Bronx (čtvrť = borough)
 print_delimiter(5)
-cursor = collection.find({"borough": "Bronx"})
+cursor = collection.find({"borough": "Bronx"}).limit(10)
 print_restaurants(cursor)
 
 # 6. Vypsání restaurací, jejichž název začíná na písmeno M
 print_delimiter(6)
-cursor = collection.find({"name": {"$regex": "^M"}})
+cursor = collection.find({"name": {"$regex": "^M"}}).limit(10)
 print_restaurants(cursor)
 
 # 7. Vypsání restaurací, které mají skóre větší než 80
 print_delimiter(7)
-cursor = collection.find({"grades.score": {"$gt": 80}})
+cursor = collection.find({"grades.score": {"$gt": 80}}).limit(10)
 print_restaurants(cursor)
 
 # 8. Vypsání restaurací, které mají skóre mezi 80 a 90
 print_delimiter(8)
 cursor = collection.find(
-    {"grades": {"$elemMatch": {"score": {"$gte": 80, "$lte": 90}}}})
+    {"grades": {"$elemMatch": {"score": {"$gte": 80, "$lte": 90}}}}).limit(10)
 print_restaurants(cursor)
 
 '''
@@ -86,18 +87,20 @@ Bonusové úlohy:
 # 9. Vypsání všech restaurací, které mají skóre mezi 80 a 90 a zároveň nevaří americkou (American) kuchyni
 print_delimiter(9)
 cursor = collection.find(
-    {"grades": {"$elemMatch": {"score": {"$gte": 80, "$lte": 90}}}, "cuisine": {"$ne": "American"}})
+    {"grades": {"$elemMatch": {"score": {"$gte": 80, "$lte": 90}}}, "cuisine": {"$ne": "American"}}).limit(10)
 print_restaurants(cursor)
 
 # 10. Vypsání všech restaurací, které mají alespoň osm hodnocení
 print_delimiter(10)
-cursor = collection.find({"grades.7": {"$exists": True}})
+cursor = collection.find({"grades.7": {"$exists": True}}).limit(10)
+print_restaurants(cursor)
+cursor = collection.find({"grades": {"$size": 8}}).limit(10)
 print_restaurants(cursor)
 
 # 11. Vypsání všech restaurací, které mají alespoň jedno hodnocení z roku 2014
 print_delimiter(11)
 cursor = collection.find({"grades.date": {"$gte": datetime.datetime(
-    2014, 1, 1), "$lt": datetime.datetime(2015, 1, 1)}})
+    2014, 1, 1), "$lt": datetime.datetime(2015, 1, 1)}}).limit(10)
 print_restaurants(cursor)
 
 '''
@@ -130,22 +133,22 @@ print_delimiter(14)
 collection.update_one({"name": "Restaurace 123"}, {
     "$set": {"name": "Restaurace 456"}})
 
-print("Pocet restauraci 123/456:", collection.find(
-    {"$or": [{"name": "Restaurace 123"}, {"name": "Restaurace 456"}]}).count())
+print("Pocet restauraci 123/456:", collection.count_documents(
+    {"$or": [{"name": "Restaurace 123"}, {"name": "Restaurace 456"}]}))
 
 # 15. Smažte svoji restauraci
 # 15.1 pomocí id (delete_one)
 # 15.2 pomocí prvního nebo druhého názvu (delete_many, využití or)
 print_delimiter(15)
 
-# 15.1
-collection.delete_one({"name": "Restaurace 456"})
+# 15.1 pomocí _id
+collection.delete_one({"_id": ObjectId("661794b62f29b80a44232497")})
 # 15.2
 collection.delete_many(
     {"$or": [{"name": "Restaurace 123"}, {"name": "Restaurace 456"}]})
 
-print("Pocet restauraci 123/456:", collection.find(
-    {"$or": [{"name": "Restaurace 123"}, {"name": "Restaurace 456"}]}).count())
+print("Pocet restauraci 123/456:", collection.count_documents(
+    {"$or": [{"name": "Restaurace 123"}, {"name": "Restaurace 456"}]}))
 
 '''
 Poslední částí tohoto cvičení je vytvoření jednoduchého indexu.
@@ -156,10 +159,12 @@ cursor.explain()['executionStats'] - výsledek si vypište na výstup a všimně
 
 Poté vytvořte index na 'borough', zopakujte dotaz a porovnejte hodnoty 'totalDocsExamined'.
 
-S řešením pomůže https://pymongo.readthedocs.io/en/stable/api/pymongo/collection.html#pymongo.collection.Collection.create_index
+#pymongo.collection.Collection.create_index
+S řešením pomůže https://pymongo.readthedocs.io/en/stable/api/pymongo/collection.html
 '''
 print_delimiter(11)
 
+collection.drop_index("borough_1")
 cursor = collection.find({"borough": "Bronx"})
 print(cursor.explain()['executionStats'])
 
