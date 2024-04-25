@@ -47,7 +47,7 @@ GET /products/_search
   {
     "bool":
     {
-      "must":
+      "should":
       [
         {
           "term":
