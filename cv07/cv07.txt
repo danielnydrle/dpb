@@ -1,0 +1,26 @@
+# 1.
+PUT /person
+
+#2.
+PUT /person/_doc/1
+{
+	"name": "Daniel Nýdrle"
+}
+
+#3.
+GET /person/_doc/1
+
+#4.
+PUT /person/_doc/1
+{
+  "name": "Daniela Endrle"
+}
+
+#5.
+GET /person/_search
+
+#6.
+DELETE /person/_doc/1
+
+#7.
+DELETE /person
