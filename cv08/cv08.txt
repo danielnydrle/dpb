@@ -1,0 +1,178 @@
+# 1. vytvořte dotaz pro vyhledávání výrazu (term) ‚coffee‘ v názvu produktu
+GET /products/_search
+{
+  "query":
+  {
+    "term":
+    {
+      "name":
+      {
+        "value": "coffee"
+      }
+    }
+  }
+}
+
+# 2. upravte dotaz tak, aby fungoval i v případě jednoho uživatelského překlepu
+GET /products/_search
+{
+  "query":
+  {
+    "fuzzy":
+    {
+      "name": {
+        "value": "coffee",
+        "fuzziness": 2
+      }
+    }
+  }
+}
+
+# 3. vytvořte dotaz, který vyhledá produkty s tagem ‚Coffee‘ (term)
+GET /products/_search
+{
+  "query":
+  {
+    "term":
+    {
+      "tags": "Coffee"
+    }
+  }
+}
+
+# 4. najděte produkty s tagem ‚Coffee‘ s 10 nebo méně kusy na skladě (in_stock)
+GET /products/_search
+{
+  "query":
+  {
+    "bool":
+    {
+      "must":
+      [
+        {
+          "term":
+          {
+            "tags": "Coffee"
+          }
+        },
+        {
+          "range":
+          {
+            "in_stock":
+            {
+              "lte": 10
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+# 5. najděte produkty, které v názvu mají ‚coffee‘, ale neobsahují ‚cup‘
+GET /products/_search?filter_path=hits.hits._source.name
+{
+  "query":
+  {
+    "bool":
+    {
+      "must":
+      [
+        {
+          "term":
+          {
+            "name": "coffee"
+          }
+        }
+      ],
+      "must_not":
+      [
+        {
+          "term":
+          {
+            "name": "cup"
+          }
+        }
+      ]
+    }
+  }
+}
+
+# 6. vyfiltrujte všechny produkty, které byly přidány po roce 2000
+GET /products/_search
+{
+  "query":
+  {
+    "bool":
+    {
+      "filter":
+      [
+        {
+          "range":
+          {
+            "created":
+            {
+              "gte": "2000-01-01T00:00:00"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+# 7. full-textově vyhledejte produkty obsahující v názvu „Red Wine“
+GET /products/_search
+{
+  "query":
+  {
+    "match":
+    {
+      "name": "Red Wine"
+    }
+  }
+}
+
+# 8. vytvořte dotaz, který bude fungovat jako našeptávač při vyhledávání
+GET /products/_search
+{
+  "query":
+  {
+    "match_phrase_prefix":
+    {
+      "name":
+      {
+        "query": "c",
+        "max_expansions": 5
+      }
+    }
+  }
+}
+
+# 9. vytvořte dotaz, který bude vracet recepty, v nichž se nachází libovolný výraz
+GET /recipes/_search
+{
+  "query":
+  {
+    "multi_match": {
+      "query": "spaghetti",
+      "fields": ["title", "description", "ingredients.name"]
+    }
+  }
+}
+
+# 10. vytvořte dotaz, který bude v názvu hledat frázi „Pasta Carbonara“
+GET /recipes/_search
+{
+  "query":
+  {
+    "match_phrase":
+    {
+      "title":
+      {
+        "query": "Pasta Carbonara",
+        "slop": 2
+      }
+    }
+  }
+}
