@@ -1,0 +1,66 @@
+# CASSANDRA
+
+# 1. vytvořte keyspace cass01 (SimpleStrategy, replication_factor 1)
+CREATE KEYSPACE cass01 WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 1};
+
+# 2. ověřte vytvoření keyspace a následně se do ní přepněte
+DESCRIBE KEYSPACES;
+USE cass01;
+
+# 3. vytvořte tabulku activity se dvěma sloupci id a datetime (PK id a datetime, řazení podle datetime sestupně)
+CREATE TABLE activity (
+		id UUID,
+		datetime TIMESTAMP,
+		PRIMARY KEY (id, datetime)
+) WITH CLUSTERING ORDER BY (datetime DESC);
+
+# 4. do tabulky přidejte sloupec event (text) a ověřte, že byl přidány
+ALTER TABLE activity ADD event TEXT;
+DESCRIBE TABLE activity;
+
+# 5. vložte jeden libovolný záznam
+INSERT INTO activity (id, datetime, event) VALUES (uuid(), '2016-01-01T11:11:11', 'event 1');
+
+# 6. vložte libovolný druhý záznam s aktuální timestamp hodnotou
+INSERT INTO activity (id, datetime, event) VALUES (uuid(), toTimestamp(now()), 'event 2');
+
+# 7. vypište vložené záznamy
+SELECT * FROM activity;
+
+# 8. smažte vytvořené záznamy, tabulku a následně i keyspace
+TRUNCATE activity;
+DROP TABLE activity;
+DROP KEYSPACE cass01;
+
+# bonus 1. vytvořte keyspace cass01_bonus (SimpleStrategy, replication_factor 1)
+CREATE KEYSPACE cass01_bonus WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 1};
+
+# bonus 2. vytvořte tabulku activity_bonus se sloupci id, datetime a duration (PK z id, datetime a type)
+# záznamy se shodným id a type jsou uložené na stejné partition
+# datetime slouží ke vzestupnému třídění
+USE cass01_bonus;
+CREATE TABLE activity_bonus (
+		id UUID,
+		datetime TIMESTAMP,
+		duration INT,
+		type TEXT,
+		PRIMARY KEY ((id, type), datetime)
+) WITH CLUSTERING ORDER BY (datetime ASC);
+
+
+# bonus 3. tabulku rozšiřte o vámi vybrané další sloupec (alespoň 3 složitější datové typy: list, set, map, tuple, ...)
+ALTER TABLE activity_bonus ADD list LIST<TEXT>;
+ALTER TABLE activity_bonus ADD s SET<TEXT>;
+ALTER TABLE activity_bonus ADD map MAP<TEXT, TEXT>;
+
+# bonus 4. vložte alespoň 10 záznamů a tabulku vypište
+INSERT INTO activity_bonus (id, datetime, duration, type, list, s, map) VALUES (uuid(), toTimestamp(now()), 1, 'type 1', ['jedna', 'dva', 'tři'], {'čtyři', 'pět', 'šest'}, {'sedm': '7', 'osm': '8', 'devět': '9'});
+INSERT INTO activity_bonus (id, datetime, duration, type, list, s, map) VALUES (uuid(), toTimestamp(now()), 2, 'type 2', ['jedenáct', 'dvanáct', 'třináct'], {'čtrnáct', 'patnáct', 'šestnáct'}, {'sedmnáct': '17', 'osmnáct': '18', 'devatenáct': '19'});
+INSERT INTO activity_bonus (id, datetime, duration, type, list, s, map) VALUES (uuid(), toTimestamp(now()), 3, 'type 3', ['dvacet jedna', 'dvacet dva', 'dvacet tři'], {'dvacet čtyři', 'dvacet pět', 'dvacet šest'}, {'dvacet sedm': '27', 'dvacet osm': '28', 'dvacet devět': '29'});
+INSERT INTO activity_bonus (id, datetime, duration, type, list, s, map) VALUES (uuid(), toTimestamp(now()), 4, 'type 4', ['třicet jedna', 'třicet dva', 'třicet tři'], {'třicet čtyři', 'třicet pět', 'třicet šest'}, {'třicet sedm': '37', 'třicet osm': '38', 'třicet devět': '39'});
+INSERT INTO activity_bonus (id, datetime, duration, type, list, s, map) VALUES (uuid(), toTimestamp(now()), 5, 'type 5', ['čtyřicet jedna', 'čtyřicet dva', 'čtyřicet tři'], {'čtyřicet čtyři', 'čtyřicet pět', 'čtyřicet šest'}, {'čtyřicet sedm': '47', 'čtyřicet osm': '48', 'čtyřicet devět': '49'});
+INSERT INTO activity_bonus (id, datetime, duration, type, list, s, map) VALUES (uuid(), toTimestamp(now()), 6, 'type 6', ['padesát jedna', 'padesát dva', 'padesát tři'], {'padesát čtyři', 'padesát pět', 'padesát šest'}, {'padesát sedm': '57', 'padesát osm': '58', 'padesát devět': '59'});
+INSERT INTO activity_bonus (id, datetime, duration, type, list, s, map) VALUES (uuid(), toTimestamp(now()), 7, 'type 7', ['šedesát jedna', 'šedesát dva', 'šedesát tři'], {'šedesát čtyři', 'šedesát pět', 'šedesát šest'}, {'šedesát sedm': '67', 'šedesát osm': '68', 'šedesát devět': '69'});
+INSERT INTO activity_bonus (id, datetime, duration, type, list, s, map) VALUES (uuid(), toTimestamp(now()), 8, 'type 8', ['sedmdesát jedna', 'sedmdesát dva', 'sedmdesát tři'], {'sedmdesát čtyři', 'sedmdesát pět', 'sedmdesát šest'}, {'sedmdesát sedm': '77', 'sedmdesát osm': '78', 'sedmdesát devět': '79'});
+INSERT INTO activity_bonus (id, datetime, duration, type, list, s, map) VALUES (uuid(), toTimestamp(now()), 9, 'type 9', ['osmdesát jedna', 'osmdesát dva', 'osmdesát tři'], {'osmdesát čtyři', 'osmdesát pět', 'osmdesát šest'}, {'osmdesát sedm': '87', 'osmdesát osm': '88', 'osmdesát devět': '89'});
+INSERT INTO activity_bonus (id, datetime, duration, type, list, s, map) VALUES (uuid(), toTimestamp(now()), 10, 'type 10', ['devadesát jedna', 'devadesát dva', 'devadesát tři'], {'devadesát čtyři', 'devadesát pět', 'devadesát šest'}, {'devadesát sedm': '97', 'devadesát osm': '98', 'devadesát devět': '99'});
