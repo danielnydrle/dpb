@@ -1,0 +1,264 @@
+# 1. vytvořte mapování pro definici struktury indexu pro objednávky
+PUT /orders-new
+{
+	"mappings": {
+		"properties": {
+			"customer": {
+				"type": "text"
+			},
+			"products": {
+				"type": "nested",
+				"properties": {
+				  "_id": {
+				    "type": "keyword"
+				  },
+				  "quantity": {
+				    "type": "integer"
+				  }
+				}
+			}
+		}
+	}
+}
+
+GET /orders-new/_search {}
+
+# 2. vložte záznam do vytvořeného indexu
+POST /orders-new/_doc
+{
+	"customer": "John Doe",
+	"products": [
+		{
+			"product_id": "okQfFY8Blyy1gTKTsOcp",
+			"quantity": 2
+		},
+		{
+			"product_id": "fkQfFY8Blyy1gTKTsOgp",
+			"quantity": 1
+		},
+		{
+			"product_id": "gEQfFY8Blyy1gTKTsOkr",
+			"quantity": 3
+		}
+	]
+}
+
+# 3. analyzéry
+# vyzkoušejte si 3 analyzéry pomocí POST _analyze
+# příklad použití najdete např. ve standardním analyzéru
+
+POST _analyze
+{
+  "analyzer": "standard",
+  "text": "Red Wine"
+}
+
+POST _analyze
+{
+  "analyzer": "whitespace",
+  "text": "Red Wine"
+}
+
+POST _analyze
+{
+  "analyzer": "fingerprint",
+  "text": "Red Wine is very good for your health."
+}
+
+# 4. zjistěte pomocí agregací maximální, minimální a průměrnou cenu produktů (bez použití stats)
+GET /products/_search
+{
+	"size": 0,
+	"aggs": {
+		"max_price": {
+			"max": {
+				"field": "price"
+			}
+		},
+		"min_price": {
+			"min": {
+				"field": "price"
+			}
+		},
+		"avg_price": {
+			"avg": {
+				"field": "price"
+			}
+		}
+	}
+}
+
+# 5. zjistěte maximální, minimální a průměrný počet prodaných produktů (s použitím stats)
+GET /products/_search
+{
+	"size": 0,
+	"aggs": {
+		"stats_quantity": {
+			"stats": {
+				"field": "sold"
+			}
+		}
+	}
+}
+
+GET /products/_search
+{
+	"size": 1,
+	"sort": {
+	  "sold": {
+	    "order": "desc"
+	  }
+	}
+}
+
+# 6. pro každý tag zjistěte, v kolika dokumentech je obsažen
+GET /products/_search
+{
+  "size": 0,
+  "aggs": {
+    "tags": {
+      "terms": {
+        "field": "tags"
+      }
+    }
+  }
+}
+
+# 7. zjistěte cenové statistiky pro jednotlivé tagy (vnořená agregace)
+GET /products/_search
+{
+	"size": 0,
+	"aggs": {
+    "tags": {
+			"terms": {
+				"field": "tags"
+			},
+			"aggs": {
+			  "prices": {
+			    "stats": {
+			      "field": "price"
+			    }
+			  }
+			}
+    }
+	}
+}
+
+# bonus 1. zjistěte cenové statistiky pouze pro produkty s tagem Coffee a Cake
+
+GET /products/_search
+{
+  "size": 0,
+  "aggs": {
+    "tags": {
+      "filters": {
+        "filters": {
+          "coffee": {
+            "term": {
+              "tags": "Coffee"
+            }
+          },
+          "cake": {
+            "term": {
+              "tags": "Cake"
+            }
+          }
+        }
+      },
+      "aggs": {
+        "prices": {
+          "stats": {
+            "field": "price"
+          }
+        }
+      }
+    }
+  }
+}
+
+# bonus 2. zjistěte minimální, maximální a průměrnou cenu objednávek podle jejich statusu
+GET /orders/_search
+{
+  "size": 0,
+  "aggs": {
+    "status": {
+      "terms": {
+        "field": "status"
+      },
+      "aggs": {
+        "prices": {
+          "stats": {
+            "field": "total_amount"
+          }
+        }
+      }
+    }
+  }
+}
+
+# bonus 3. zjistěte průměrnou cenu a počet objednávek pro jednotlivá čtvrtletí roku 2016 (dokumenty bez data dok. skončí v bucketu N/A)
+
+GET /orders/_search
+{
+  "size": 0,
+  "aggs": {
+    "quarters": {
+      "date_range": {
+        "field": "purchased_at",
+        "missing": "0001-01-01",
+        "ranges": [
+          {
+            "from": "2016-01-01",
+            "to": "2016-03-31",
+            "key": "Q1"
+          },
+          {
+            "from": "2016-04-01",
+            "to": "2016-06-30",
+            "key": "Q2"
+          },
+          {
+            "from": "2016-07-01",
+            "to": "2016-09-30",
+            "key": "Q3"
+          },
+          {
+            "from": "2016-10-01",
+            "to": "2016-12-31",
+            "key": "Q4"
+          },
+          {
+            "from": "0000-01-01",
+            "to": "0002-01-01",
+            "key": "N/A"
+          }
+        ]
+      },
+      "aggs": {
+        "averages": {
+          "avg": {
+            "field": "total_amount"
+          }
+        },
+        "counts": {
+          "value_count": {
+            "field": "lines.amount"
+          }
+        }
+      }
+    }
+  }
+}
+
+
+PUT /orders/_doc/1
+{
+  "lines": [
+    {
+      "product_id": 1,
+      "amount": 69,
+      "quantity": 69
+    }
+  ],
+  "total_amount": 690
+}
