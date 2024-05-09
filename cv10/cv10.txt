@@ -47,7 +47,6 @@ CREATE TABLE activity_bonus (
 		PRIMARY KEY ((id, type), datetime)
 ) WITH CLUSTERING ORDER BY (datetime ASC);
 
-
 # bonus 3. tabulku rozšiřte o vámi vybrané další sloupec (alespoň 3 složitější datové typy: list, set, map, tuple, ...)
 ALTER TABLE activity_bonus ADD list LIST<TEXT>;
 ALTER TABLE activity_bonus ADD s SET<TEXT>;
